@@ -1,1 +1,14 @@
+1. Udacity provided sample images of 960 x 540 pixels to train our pipeline
+
+The pipeline itself will look as follows:
+-Convert original image to HSL(HSL stands for hue, saturation, and lightness)
+-Isolate yellow and white from HSL image
+-Combine isolated HSL with original image
+-Convert image to grayscale for easier manipulation
+-Apply Gaussian Blur/Gaussian smoothing to smoothen edges
+-Apply Canny Edge Detection on smoothed gray image
+-Trace Region Of Interest and discard all other lines identified by our previous step that are outside this region
+-Perform a Hough Transform to find lanes within our region of interest and trace them in red
+-Separate left and right lanes
+-Interpolate line gradients to create two smooth lines
 
