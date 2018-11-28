@@ -1,1 +1,22 @@
+-Distortion Correction
+  compute the camera matrix and distortion co-efficients to undistort the image
+
+-Gradients and color thresholds
+  apply thresholds on gradients and colors (in RGB and HLS color spaces) to obtain a binary thresholded image 
+ 
+-Perspective transform ("birds-eye view")
+  extract the vertices to perform a perspective transform
+  
+-Detect lane pixels (sliding window search)
+  perform a sliding window search, starting with the base likely positions of the 2 lanes, calculated from the histogram. 
+  using 10 windows of width 100 pixels.The x & y coordinates of non zeros pixels are found, a polynomial is fit for 
+  these coordinates and the lane lines are drawn.
+ 
+-searching around previosly detected lane line 
+  Since consecutive frames are likely to have lane lines in roughly similar positions, we search around a margin of 50 pixels of the previously detected lane lines
+
+-Inverse transform and output For the final image:
+    Paint the lane area
+    Perform an inverse perspective transform
+    Combine the precessed image with the original image
 
