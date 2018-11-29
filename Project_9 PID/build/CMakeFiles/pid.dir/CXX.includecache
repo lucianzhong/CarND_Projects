@@ -1,0 +1,94 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/PID.cpp
+PID.h
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/PID.h
+cmath
+-
+iostream
+-
+
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/PID.h
+vector
+-
+stdexcept
+-
+limits
+-
+
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/json.hpp
+algorithm
+-
+array
+-
+cassert
+-
+cctype
+-
+ciso646
+-
+cmath
+-
+cstddef
+-
+cstdint
+-
+cstdlib
+-
+cstring
+-
+forward_list
+-
+functional
+-
+initializer_list
+-
+iomanip
+-
+iostream
+-
+iterator
+-
+limits
+-
+locale
+-
+map
+-
+memory
+-
+numeric
+-
+sstream
+-
+stdexcept
+-
+string
+-
+type_traits
+-
+utility
+-
+vector
+-
+
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/main.cpp
+uWS/uWS.h
+-
+iostream
+-
+json.hpp
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/json.hpp
+PID.h
+/home/lucian/Desktop/Udacity/Uadacity_Self-driving-car/Project_9 PID/src/PID.h
+math.h
+-
+limits
+-
+
