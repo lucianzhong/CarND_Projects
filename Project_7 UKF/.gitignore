@@ -1,0 +1,8 @@
+# silly macOS
+.DS_Store
+
+# build files
+build/
+
+# vscode junk
+.vscode/
