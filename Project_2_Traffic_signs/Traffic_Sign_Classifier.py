@@ -3,306 +3,299 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 import pickle
+import cv2
 
-# read in the training,validation and testing data
+import tensorflow as tf
+from tensorflow.contrib.layers import flatten
+from math import ceil
+from sklearn.utils import shuffle
+
+
+
+# Load pickled data
+import pickle
+
+# TODO: Fill this in based on where you saved the training and testing data
+
 training_file = "./traffic-signs-data/train.p"
-validation_file = "./traffic-signs-data/valid.p"
 testing_file = "./traffic-signs-data/test.p"
 
 with open(training_file, mode='rb') as f:
     train = pickle.load(f)
-with open(validation_file, mode='rb') as f:
-    valid = pickle.load(f)
 with open(testing_file, mode='rb') as f:
     test = pickle.load(f)
-
+    
 X_train, y_train = train['features'], train['labels']
-X_valid, y_valid = valid['features'], valid['labels']
 X_test, y_test = test['features'], test['labels']
 
-# read in the properties of the traffic signs data sets
-n_train = len(X_train)
-n_valid = len(X_valid)
-n_test = len(X_test)
-image_shape = X_train.shape[1:]
-labels_pd = pd.read_csv("./signnames.csv")
-n_classes = len(labels_pd)
+print("X_train shape:", X_train.shape)
+print("y_train shape:", y_train.shape)
+print("X_test shape:", X_test.shape)
+print("y_test shape:", y_test.shape)
+print("X_train.shape[0]",X_train.shape[0])
 
-# print the properties of the traffic signs data sets
+
+### Replace each question mark with the appropriate value.
+import numpy as np
+
+# TODO: Number of training examples
+n_train = len(X_train)
+
+# TODO: Number of testing examples.
+n_test = len(X_test)
+
+# TODO: What's the shape of an traffic sign image?
+image_shape = X_train[0].shape
+
+# TODO: How many unique classes/labels there are in the dataset.
+n_classes = len(np.unique(y_train))
+
 print("Number of training examples =", n_train)
-print("Number of validation examples =", n_valid)
 print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
 
 
-# plot the training images
-fig, axs = plt.subplots(2,4, figsize=(20, 10))
+
+
+
+
+
+### Data exploration visualization goes here.
+### Feel free to use as many code cells as needed.
+import matplotlib.pyplot as plt
+import random
+# Visualizations will be shown in the notebook.
+
+
+# show image of 10 random data points
+fig, axs = plt.subplots(2,5, figsize=(15, 6))
+fig.subplots_adjust(hspace = .2, wspace=.001)
 axs = axs.ravel()
-labels_sign = labels_pd.T.to_dict()
-for i in range(8):
+for i in range(10):
     index = random.randint(0, len(X_train))
     image = X_train[index]
     axs[i].axis('off')
     axs[i].imshow(image)
-    axs[i].set_title(str(y_train[index]) + ":" + labels_sign[y_train[index]]['SignName'])
+    axs[i].set_title(y_train[index])
+#plt.show()
 
-# distribution of classes in train,validation and test data
-height_train, bins_train = np.histogram(y_train, bins=n_classes)
-height_train = height_train/n_train
-wist_train = (bins_train[:-1] + bins_train[1:]) / 2
+# histogram of label frequency
+hist, bins = np.histogram(y_train, bins=n_classes)
+width = 0.7 * (bins[1] - bins[0])
+center = (bins[:-1] + bins[1:]) / 2
+plt.bar(center, hist, align='center', width=width)
+#plt.show()
 
-height_valid, bins_valid = np.histogram(y_valid, bins=n_classes)
-height_valid = height_valid/n_valid
-wist_valid = (bins_valid[:-1] + bins_valid[1:]) / 2
 
-height_test, bins_test = np.histogram(y_test, bins=n_classes)
-height_test = height_test/n_test
-wist_test = (bins_test[:-1] + bins_test[1:]) / 2
+#Step 2: Design and Test a Model Architecture
+# The LeNet-5 CNN
 
-plt.subplots(figsize=(20, 5))
-plt.subplot(1,3,1)
-plt.bar(wist_train,height_train)
-plt.title('distribution of classes in the training')
-plt.subplot(1,3,2)
-plt.bar(wist_valid,height_valid)
-plt.title('distribution of classes in the validation')
-plt.subplot(1,3,3)
-plt.bar(wist_test,height_test)
-plt.title('distribution of classes in the test')
+### Preprocess the data here.
+### Feel free to use as many code cells as needed.
 
-plt.show()
+# Convert to grayscale
+X_train_rgb = X_train
+X_train_gry=np.zeros(shape=(X_train.shape[0],32,32,1))
+print("X_train.shape[0]",X_train.shape[0])
+for i in range(X_train.shape[0]):
+    X_train_gry[i] = np.sum(X_train[i]/3, axis=2, keepdims=True)
 
-# Pre-processing training data with grayscale and normalization
-# grayscale
-X_train = np.sum(X_train/3, axis=3, keepdims=True)
-X_valid = np.sum(X_valid/3, axis=3, keepdims=True)
-X_test = np.sum(X_test/3, axis=3, keepdims=True)
+X_test_rgb = X_test
+X_test_gry=np.zeros(shape=(X_test_rgb.shape[0],32,32,1))
+for i in range(X_test.shape[0]):
+    X_test_gry[i] = np.sum(X_test[i]/3, axis=2, keepdims=True) #
 
-# Normalization
-X_train = (X_train - 128)/128
-X_valid = (X_valid - 128)/128
-X_test = (X_test - 128)/128
 
-print('X_train shape:', X_train.shape)
-print('X_test shape:', X_test.shape)
-print('X_valid shape:', X_valid.shape)
 
-# Shuffle the training data
-from sklearn.utils import shuffle
-import tensorflow as tf
+print('RGB shape:', X_train_rgb.shape)
+print('Grayscale shape:', X_train_gry.shape)
+
+
+
+X_train = X_train_gry
+X_test = X_test_gry
+
+print(np.mean(X_train))
+print(np.mean(X_test))
+
+# Visualize rgb vs grayscale
+n_rows = 8
+n_cols = 10
+offset = 9000
+fig, axs = plt.subplots(n_rows,n_cols, figsize=(18, 14))
+fig.subplots_adjust(hspace = .1, wspace=.001)
+axs = axs.ravel()
+for j in range(0,n_rows,2):
+    for i in range(n_cols):
+        index = i + j*n_cols
+        image = X_train_rgb[index + offset]
+        axs[index].axis('off')
+        axs[index].imshow(image)
+    for i in range(n_cols):
+        index = i + j*n_cols + n_cols 
+        image = X_train_gry[index + offset - n_cols].squeeze()
+        axs[index].axis('off')
+        axs[index].imshow(image, cmap='gray')
+#plt.show()
+
+#his data is going to need to be shuffled.
+
+
+X_train_normalized=X_train
+X_test_normalized=X_test
+
+for i in range(X_train.shape[0]):
+    X_train_normalized[i]=(  (X_train[i] - 128)/128  )
+for i in range(X_test.shape[0]):
+    X_test_normalized[i]=(  (X_test[i] - 128)/128  )
+
+print(np.mean(X_train_normalized))
+print(np.mean(X_test_normalized))
+print("X_train_normalized.shape",X_train_normalized.shape)
+
+
+
+
+
+# LeNet CNN
 from tensorflow.contrib.layers import flatten
 
-# define the initial architecture of the LeNet
-def LeNet(x):
+def LeNet2(x):    
+    # Hyperparameters
     mu = 0
     sigma = 0.1
+    
+    # TODO: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
+    W1 = tf.Variable(tf.truncated_normal(shape=(5, 5, 1, 6), mean = mu, stddev = sigma), name="W1")
+    x = tf.nn.conv2d(x, W1, strides=[1, 1, 1, 1], padding='VALID')
+    b1 = tf.Variable(tf.zeros(6), name="b1")
+    x = tf.nn.bias_add(x, b1)
+    print("layer 1 shape:",x.get_shape())
 
-    # Layer 1: Convolutional layer  Input shape:32x32x1  Output shape:28x28x6
-    conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 1, 6), mean=mu, stddev=sigma))
-    conv1_b = tf.Variable(tf.zeros(6))
-    conv1 = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
+    # TODO: Activation.
+    x = tf.nn.relu(x)
+    
+    # TODO: Pooling. Input = 28x28x6. Output = 14x14x6.
+    x = tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+    layer1 = x
+    
+    # TODO: Layer 2: Convolutional. Output = 10x10x16.
+    W2 = tf.Variable(tf.truncated_normal(shape=(5, 5, 6, 16), mean = mu, stddev = sigma), name="W2")
+    x = tf.nn.conv2d(x, W2, strides=[1, 1, 1, 1], padding='VALID')
+    b2 = tf.Variable(tf.zeros(16), name="b2")
+    x = tf.nn.bias_add(x, b2)
+                     
+    # TODO: Activation.
+    x = tf.nn.relu(x)
 
-    # Relu activation
-    conv1 = tf.nn.relu(conv1)
+    # TODO: Pooling. Input = 10x10x16. Output = 5x5x16.
+    x = tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+    layer2 = x
+    
+    # TODO: Layer 3: Convolutional. Output = 1x1x400.
+    W3 = tf.Variable(tf.truncated_normal(shape=(5, 5, 16, 400), mean = mu, stddev = sigma), name="W3")
+    x = tf.nn.conv2d(x, W3, strides=[1, 1, 1, 1], padding='VALID')
+    b3 = tf.Variable(tf.zeros(400), name="b3")
+    x = tf.nn.bias_add(x, b3)
+                     
+    # TODO: Activation.
+    x = tf.nn.relu(x)
+    layer3 = x
 
-    # Pooling  Input shape:28x28x6  Output shape:14x14x6.
-    conv1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    # Layer 2: Convolutional layer Output shape:10x10x16.
-    conv2_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 6, 16), mean=mu, stddev=sigma))
-    conv2_b = tf.Variable(tf.zeros(16))
-    conv2 = tf.nn.conv2d(conv1, conv2_W, strides=[1, 1, 1, 1], padding='VALID') + conv2_b
-
-    # Relu activation.
-    conv2 = tf.nn.relu(conv2)
-
-    # Pooling. Input shape:10x10x16 Output shape:5x5x16.
-    conv2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    # Flatten. Input shape:5x5x16 Output shape:400.
-    fc0 = flatten(conv2)
-
-    # Layer 3: Fully connected. Input shape:400  Output shape:120
-    fc1_W = tf.Variable(tf.truncated_normal(shape=(400, 120), mean=mu, stddev=sigma))
-    fc1_b = tf.Variable(tf.zeros(120))
-    fc1 = tf.matmul(fc0, fc1_W) + fc1_b
-
-    # Relu activation
-    fc1 = tf.nn.relu(fc1)
-
-    # Layer 4: Fully connected  Input shape:120 Output shape:84
-    fc2_W = tf.Variable(tf.truncated_normal(shape=(120, 84), mean=mu, stddev=sigma))
-    fc2_b = tf.Variable(tf.zeros(84))
-    fc2 = tf.matmul(fc1, fc2_W) + fc2_b
-
-    # Relu activation.
-    fc2 = tf.nn.relu(fc2)
-
-    # Layer 5: Fully Connected  Input shape:84 Output shape 43.
-    fc3_W = tf.Variable(tf.truncated_normal(shape=(84, 43), mean=mu, stddev=sigma))
-    fc3_b = tf.Variable(tf.zeros(43))
-    logits = tf.matmul(fc2, fc3_W) + fc3_b
-
-    return logits
-
-# Modify the LeNet to improve accuracy
-def LeNet_modified(x):
-    mu = 0
-    sigma = 0.1
-
-    # Layer 1: Convolutional layer  Input shape:32x32x1  Output shape:28x28x6
-    conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 1, 6), mean=mu, stddev=sigma))
-    conv1_b = tf.Variable(tf.zeros(6))
-    conv1 = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
-
-    # Relu activation.
-    conv1 = tf.nn.relu(conv1)
-
-    # Pooling. Input shape:28x28x6. Output shape:14x14x6.
-    conv1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    # Layer 2: Convolutional Output shape:10x10x16.
-    conv2_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 6, 16), mean=mu, stddev=sigma))
-    conv2_b = tf.Variable(tf.zeros(16))
-    conv2 = tf.nn.conv2d(conv1, conv2_W, strides=[1, 1, 1, 1], padding='VALID') + conv2_b
-
-    # Relu activation.
-    conv2 = tf.nn.relu(conv2)
-
-    # Pooling. Input shape:10x10x16. Output shape:5x5x16.
-    conv2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    # Layer 3: Convolutional. Output shape:1x1x400.
-    conv3_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 16, 400), mean=mu, stddev=sigma))
-    conv3_b = tf.Variable(tf.zeros(400))
-    conv3 = tf.nn.conv2d(conv2, conv3_W, strides=[1, 1, 1, 1], padding='VALID') + conv3_b
-
-    #Relu activation
-    conv3 = tf.nn.relu(conv3)
-
-    # Flatten  Input shape:1x1x400. Output shape:400
-    conv3_flat = flatten(conv3)
-
-
-    #Flatten Input shape:5x5x16. Output shape:400.
-    fc0 = flatten(conv2)
-
-    # Concat Input shape: 400 and 400. Output shape:800
-    fc0 = tf.concat(1, [conv3_flat, fc0])
-
+    # TODO: Flatten. Input = 5x5x16. Output = 400.
+    layer2flat = flatten(layer2)
+    print("layer2flat shape:",layer2flat.get_shape())
+    
+    # Flatten x. Input = 1x1x400. Output = 400.
+    xflat = flatten(x)
+    print("xflat shape:",xflat.get_shape())
+    
+    # Concat layer2flat and x. Input = 400 + 400. Output = 800
+    x = tf.concat([xflat, layer2flat], 1)
+    print("x shape:",x.get_shape())
+    
     # Dropout
-    fc0 = tf.nn.dropout(fc0, keep_prob)
+    x = tf.nn.dropout(x, keep_prob)
+    
+    # TODO: Layer 4: Fully Connected. Input = 800. Output = 43.
+    W4 = tf.Variable(tf.truncated_normal(shape=(800, 43), mean = mu, stddev = sigma), name="W4")
+    b4 = tf.Variable(tf.zeros(43), name="b4")    
+    logits = tf.add(tf.matmul(x, W4), b4)
+    
+    # TODO: Activation.
+    #x = tf.nn.relu(x)
 
-    # Layer 4: Fully Connected  Input shape:800. Output shape:43.
-    fc1_W = tf.Variable(tf.truncated_normal(shape=(800, 43), mean=mu, stddev=sigma))
-    fc1_b = tf.Variable(tf.zeros(43))
-    logits = tf.matmul(fc0, fc1_W) + fc1_b
+    # TODO: Layer 5: Fully Connected. Input = 120. Output = 84.
+    #W5 = tf.Variable(tf.truncated_normal(shape=(120, 84), mean = mu, stddev = sigma))
+    #b5 = tf.Variable(tf.zeros(84)) 
+    #x = tf.add(tf.matmul(x, W5), b5)
+    
+    # TODO: Activation.
+    #x = tf.nn.relu(x)
+
+    # TODO: Layer 6: Fully Connected. Input = 84. Output = 43.
+    #W6 = tf.Variable(tf.truncated_normal(shape=(84, 43), mean = mu, stddev = sigma))
+    #b6 = tf.Variable(tf.zeros(43)) 
+    #logits = tf.add(tf.matmul(x, W6), b6)
+    
     return logits
+
+
+tf.reset_default_graph() 
 
 x = tf.placeholder(tf.float32, (None, 32, 32, 1))
 y = tf.placeholder(tf.int32, (None))
+keep_prob = tf.placeholder(tf.float32) # probability to keep units
 one_hot_y = tf.one_hot(y, 43)
-keep_prob = tf.placeholder(tf.float32)
 
-# Train LeNet and calculate the accuracy based on training data and validation data
-# Hyperparameters
-EPOCHS = 80
-BATCH_SIZE = 128
-rate = 0.0008
-dropout_train = 0.7
-dropout_valid = 1.0
+rate = 0.0009
 
-logits = LeNet(x)
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=one_hot_y, logits=logits)
+logits = LeNet2(x)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=one_hot_y)
 loss_operation = tf.reduce_mean(cross_entropy)
 optimizer = tf.train.AdamOptimizer(learning_rate = rate)
 training_operation = optimizer.minimize(loss_operation)
+
+
 correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(one_hot_y, 1))
 accuracy_operation = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver()
 
-# Define accuracy calculation function
 def evaluate(X_data, y_data):
     num_examples = len(X_data)
     total_accuracy = 0
     sess = tf.get_default_session()
     for offset in range(0, num_examples, BATCH_SIZE):
         batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
-        accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
+        accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 1.0})
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 
-# Training LetNet in every epoch
+EPOCHS = 60
+BATCH_SIZE = 100
+
+
+
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     num_examples = len(X_train)
+    
     print("Training...")
     print()
     for i in range(EPOCHS):
-        X_train, y_train = shuffle(X_train, y_train)
+        #X_train, y_train = shuffle(X_train, y_train)
         for offset in range(0, num_examples, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
-
-        # Calculation validation accuracy
-        validation_accuracy = evaluate(X_valid, y_valid)
-        print("EPOCH {} ...".format(i + 1))
+            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 0.5})
+            
+        validation_accuracy = evaluate(X_validation, y_validation)
+        print("EPOCH {} ...".format(i+1))
         print("Validation Accuracy = {:.3f}".format(validation_accuracy))
         print()
-
-    saver.save(sess, './lenet_modified')
+        
+    saver.save(sess, 'lenet')
     print("Model saved")
 
-# Calculation test set accuracy
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    saver = tf.train.import_meta_graph('./lenet_modified.meta')
-    saver.restore(sess, "./lenet_modified")
-    my_accuracy = evaluate(X_test, y_test)
-    print("Test Set Accuracy = {:.3f}".format(my_accuracy))
-
-#Load the German_Traffic_signs images
-import glob
-import cv2
-
-fig.axs = plt.subplots(1, 5, figsize=(18, 2))
-fig.subplots_adjust(hspace=.2, wspace=.001)
-axs = axs.ravel()
-new_images = []
-
-for i, img in enumerate(glob.glob('./German_traffic_signs/image*.png')):
-    image = cv2.imread(img)
-    image = cv2.resize(image, (32, 32))
-    axs[i].axis('off')
-    axs[i].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    image = np.reshape(np.asarray(image), [32, 32, 3])
-    new_images.append(image)
-
-new_images = np.asarray(new_images)
-new_images_gry = np.sum(new_images / 3, axis=3, keepdims=True)
-new_images_normalized = (new_images_gry - 128) / 128
-print(new_images_normalized.shape)
-
-# Using the trained LeNet network to classify German_Trafic_signs
-
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    saver = tf.train.import_meta_graph('./lenet_modified.meta')
-    saver.restore(sess, "./lenet_modified")
-    prediction = tf.nn.softmax(logits)
-    classification = sess.run(prediction, feed_dict={x: new_images_normalized, keep_prob: dropout_valid})
-    result = np.array([])
-
-for i in range(5):
-    print(np.argmax(classification[i]))
-    result = np.append(result, np.argmax(classification[i]))
-
-# Output Top 5 Softmax Probabilities For Each Image
-fig, axs = plt.subplots(5, 2, figsize=(10, 20))
-axs = axs.ravel()
-with tf.Session() as sess:
-    for i in range(len(classification)):
-        print(sess.run(tf.nn.top_k(tf.constant(classification[i]), k=5)))
 

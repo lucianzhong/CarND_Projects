@@ -1,4 +1,4 @@
-1. Udacity provided sample images of 960 x 540 pixels to train our pipeline
+Udacity provided sample images of 960 x 540 pixels to train our pipeline
 
 The pipeline itself will look as follows:
 -Convert original image to HSL(HSL stands for hue, saturation, and lightness)
@@ -12,3 +12,26 @@ The pipeline itself will look as follows:
 -Separate left and right lanes
 -Interpolate line gradients to create two smooth lines
 
+
+
+典型的车道检测一般分为以下几个步骤：
+1.Select the ROI
+2.Gaussian Smoothing
+3.Canny Edge Detection
+4.Hough Extrapolation
+
+1.首先是ROI，Region of Interest，目标区域，目标区域的选择有两个部分，颜色和区域范.因为车的摄像头在固定位置，因此检测的车道在图片中的固定范围区域。这里可以由两个方法来确定目标区域的包络	区。一个是将图片的坐标显现出来，用顶点去把它框出来；第二个是按比率框区域。颜色的选择稍微单纯些，需要上下阀值来选出黄色或者是白色。
+
+2.Canny Edge Detection，这个理论是Canny老爷子在1986年提出。主要思想是利用梯度去检测边缘。
+	颜色本身，非常容易受到光照等因素的影响，同类的物体颜色有很多变化。所以颜色本身难以提供关键信息。所以就有了一个关键的东西，灰度图。把白色与黑色之间按对数关系分为若干等级，也就是灰度图其实可以表示图片的强度分布。
+
+3.高斯平滑（Gaussian smothing)，对图片模糊处理和消除噪音
+
+4.Hough Transform，霍夫变换，演算流程大致如下，給定一個物件、要辨別的形狀的種類，演算法會在參數空間(parameter space)中執行投票來決定物體的形狀，而這是由累加空間(accumulator 		space)裡的局部最大值(local maximum)來決定。我的理解是这样的：有两个空间，一个是笛卡尔坐标系空间，一个是参数空间也叫作霍夫空间。拿y=mx+b来解释。拿y=mx+b来解释。在xy space 上，点1、2、3、4都在y=mx+b上，在mc space上，坐标轴分别是斜率和截距，直线1、2、3、4都经过唯一一个点（斜率，截距）。
+
+
+
+
+Reference:
+
+https://zhuanlan.zhihu.com/p/34147522

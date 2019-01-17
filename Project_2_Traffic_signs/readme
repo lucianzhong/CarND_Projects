@@ -1,1 +1,14 @@
 LeNet
+
+
+
+The dataset to download:
+https://d17h27t6h515a5.cloudfront.net/topher/2016/November/581faac4_traffic-signs-data/traffic-signs-data.zip
+
+
+https://github.com/jeremy-shannon/CarND-Traffic-Sign-Classifier-Project
+
+
+
+step 2: Design and Test a Model Architecture
+	The LeNet-5 CNN

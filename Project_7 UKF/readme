@@ -1,0 +1,51 @@
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Clone this repo.
+-Make a build directory: mkdir build && cd build
+-Compile: cmake .. && make
+-Run it: ./UnscentedKF path/to/input.txt path/to/output.txt. You can find some sample inputs in 'data/'.
+  eg. ./UnscentedKF  ../data/obj_pose-laser-radar-synthetic-input.txt output.txt
+
+
+
+
+
+In this project utilize an Unscented Kalman Filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project reburic.
+
+This project involves the Term 2 Simulator
+download:
+https://github.com/udacity/self-driving-car-sim/releases
+
+
+
+
+首先简单介绍一下KF,EKF和UKF的区别。
+
+以诞生时间来算的话，KF是大哥，EKF是二哥，UKF是三弟。
+
+以功能来算的话，KF大哥的诞生是为了处理线性递归问题。KF大哥的诞生解决了很多以前没能好好解决的问题，有时也被称作最优滤波器，从此名震江湖。KF大哥确实是划时代的滤波器，但是因为KF是解决线性回归问题的滤波器，他在处理非线性系统的问题上不是很给力。所以，有个叫EKF的二弟总结了KF大哥的优点，并且凭借偏导数和雅克比矩阵的能力，优化了KF大哥处理非线性问题的性能。不过因为偏导数高阶导数省略问题和雅克比矩阵计算难度的问题，让EKF的效果不是很好。 再然后，三弟UKF就出现了。 UKF按一定距离取sigma points 的方式，然后让这些sigma points 按照状态转移矩阵更新一下sigma points状态的预测值，再然后根据sigma points 算出权重，最终计算出x的预测值。测量值更新的时候，（需要计算非线性的）再得到传感器信息之前，会再利用预测后的sigma points和权重，根据测量转移矩阵得到测量值的预测值。这样测量误差z_error就能根据z_传感器值 - z预测值得到。之后就比较简单了， 先计算出correlation matrix，再计算Kalman gain， 在更新x_和P_就可以了（因为他们会在下一次计算的时候用到）。
+
+总的来说:
+KF处理线性模型
+EKF 通过雅克比和偏导数近似(处理）非线性模型，但是忽略了高阶导数
+UKF 通过定义sigma点的方式近似非线性模型，因为没有用雅克比和偏导数，让计算变得更加简单，同时也没有忽略高阶导数项。所以相对EKF,UKF计算量少，且效果好。唯一的问题就是，看着太复杂。
+
+
+UKF:
+	
+	Prediction: Generate sigma point
+				Predict sigma points
+				Predict mean and covariance
+	Update:		Predict measurement
+				Update state
+
+
+
+
+Reference:
+
+https://zhuanlan.zhihu.com/p/35729804
+
+https://www.jianshu.com/p/b23cb0163626

@@ -154,29 +154,30 @@ void Vehicle::update_available_states(bool car_to_left, bool car_to_right) {
   }
 }
 
+// {{target_s, target_s_d, target_s_dd}, {target_d, target_d_d, target_d_dd}};
 vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vector<vector<double>>> predictions, double duration, bool car_just_ahead) {
-  // Returns two lists s_target and d_target in a single vector - s_target includes 
-  // [s, s_dot, and s_ddot] and d_target includes the same
-  // If no leading car found target lane, ego car will make up PERCENT_V_DIFF_TO_MAKE_UP of the difference
-  // between current velocity and target velocity. If leading car is found set target s to FOLLOW_DISTANCE
+  // Returns two lists s_target and d_target in a single vector - s_target includes [s, s_dot, and s_ddot] and d_target includes the same
+  // If no leading car found target lane, ego car will make up PERCENT_V_DIFF_TO_MAKE_UP of the difference between current velocity and target velocity. If leading car is found set target s to FOLLOW_DISTANCE
   // and target s_dot to leading car's s_dot based on predictions
   int target_lane, current_lane = this->d / 4; 
   double target_d; 
   // **** TARGETS ****
-  // lateral displacement : depends on state
-  // lateral velocity : 0
+  // lateral displacement : depends on state 
+    // lateral velocity : 0
   double target_d_d = 0;
   // lateral acceleration : 0
   double target_d_dd = 0;
+
   // longitudinal velocity : current velocity + max allowed accel * duration
   double target_s_d = min(this->s_d + MAX_INSTANTANEOUS_ACCEL/4 * duration, SPEED_LIMIT);
-  target_s_d = SPEED_LIMIT;  
-  // longitudinal acceleration : zero ?
-  double target_s_dd = 0;
+         
+
+// longitudinal acceleration : zero ?
+  //double target_s_dd = 0;
+
   // longitudinal acceleration : difference between current/target velocity over trajectory duration?
-  //double target_s_dd = (target_s_d - this->s_d) / (N_SAMPLES * DT);
-  // longitudinal displacement : current displacement plus difference in current/target velocity times 
-  // trajectory duration
+  double target_s_dd = (target_s_d - this->s_d) / (N_SAMPLES * DT);
+  // longitudinal displacement : current displacement plus difference in current/target velocity times / trajectory duration
   double target_s = this->s + (this->s_d + target_s_d) / 2 * duration;
 
   vector<double> leading_vehicle_s_and_sdot;
@@ -201,15 +202,12 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   leading_vehicle_s_and_sdot = get_leading_vehicle_data_for_lane(target_lane, predictions, duration);
   double leading_vehicle_s = leading_vehicle_s_and_sdot[0];
   if (leading_vehicle_s - target_s < FOLLOW_DISTANCE && leading_vehicle_s > this->s) {
-
     target_s_d = leading_vehicle_s_and_sdot[1];
-
     if (fabs(leading_vehicle_s - target_s) < 0.5 * FOLLOW_DISTANCE) {
       //cout << "TOO CLOSE IN LANE " << target_lane << "!! current target speed: " << target_s_d;
       target_s_d -= 1; // slow down if too close
       //cout << "  new target speed: " << target_s_d << endl;
     }
-
     target_s = leading_vehicle_s - FOLLOW_DISTANCE;
     // target acceleration = difference between start/end velocities over time duration? or just zero?
     //target_s_dd = (target_s_d - this->s_d) / (N_SAMPLES * DT);
@@ -220,14 +218,14 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
     //    << ", lane: " << target_lane 
     //    << ", speed: " << leading_vehicle_s_and_sdot[1] << endl;
   }
-
   // emergency brake
   if (car_just_ahead) {
     target_s_d = 0.0;
   }
-
   return {{target_s, target_s_d, target_s_dd}, {target_d, target_d_d, target_d_dd}};
 }
+
+
 
 vector<double> Vehicle::get_leading_vehicle_data_for_lane(int target_lane, map<int, vector<vector<double>>> predictions, double duration) {
   // returns s and s_dot for the nearest (ahead) vehicle in target lane
@@ -295,7 +293,7 @@ vector<vector<double>> Vehicle::generate_traj_for_target(vector<vector<double>> 
   vector<double> current_d = {this->d, this->d_d, this->d_dd};
 
   // determine coefficients of optimal JMT 
-  this->s_traj_coeffs = get_traj_coeffs(current_s, target_s, duration);
+  this->s_traj_coeffs = get_traj_coeffs(current_s, target_s, duration); //s(t) = a_0 + a_1 * t + a_2 * t**2 + a_3 * t**3 + a_4 * t**4 + a_5 * t**5
   this->d_traj_coeffs = get_traj_coeffs(current_d, target_d, duration);
 
   // // DEBUG

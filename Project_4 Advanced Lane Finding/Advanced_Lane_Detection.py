@@ -10,6 +10,7 @@ from IPython.display import HTML
 
 # step 1 Compute the camera calibration matrix and distortion coefficients given a set of chessboard images
 
+
 # Read in chessboard images
 images = glob.glob("camera_cal/calibration*.jpg")
 plt.figure(figsize=(20, 10))
@@ -46,7 +47,8 @@ for counter_image, fname in enumerate(images):
 cv2.destroyAllWindows()
 
 # calibrate camera by using image points and object points
-img = cv2.imread('camera_cal/calibration1.jpg')
+img = cv2.imread('camera_cal/calibration01.jpg')
+#print("img.shape",img)
 img_size = (img.shape[1], img.shape[0])
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
 

@@ -1,0 +1,73 @@
+This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
+
+Project Introduction
+Your robot has been kidnapped and transported to a new location! Luckily it has a map of this location, a (noisy) GPS estimate of its initial location, and lots of (noisy) sensor and control data.
+
+In this project you will implement a 2 dimensional particle filter in C++. Your particle filter will be given a map and some initial localization information (analogous to what a GPS would provide). At each time step your filter will also get observation and control data
+
+root
+|   build.sh
+|   clean.sh
+|   CMakeLists.txt
+|   README.md
+|   run.sh
+|
+|___data
+|   |   control_data.txt
+|   |   gt_data.txt
+|   |   map_data.txt
+|   |
+|   |___observation
+|       |   observations_000001.txt
+|       |   ... 
+|       |   observations_002444.txt
+|   
+|___src
+    |   helper_functions.h
+    |   main.cpp
+    |   map.h
+    |   particle_filter.cpp
+    |   particle_filter.h
+
+How to run?
+./run.sh
+
+
+
+
+Inputs to the Particle Filter
+You can find the inputs to the particle filter in the data directory.
+
+The Map*
+map_data.txt includes the position of landmarks (in meters) on an arbitrary Cartesian coordinate system. Each row has three columns
+
+x position
+y position
+landmark id
+Map data provided by 3D Mapping Solutions GmbH.
+Control Data
+control_data.txt contains rows of control data. Each row corresponds to the control data for the corresponding time step. The two columns represent
+
+vehicle speed (in meters per second)
+vehicle yaw rate (in radians per second)
+Observation Data
+The observation directory includes around 2000 files. Each file is numbered according to the timestep in which that observation takes place.
+
+These files contain observation data for all "observable" landmarks. Here observable means the landmark is sufficiently close to the vehicle. Each row in these files corresponds to a single landmark. The two columns represent:
+
+x distance to the landmark in meters (right is positive) RELATIVE TO THE VEHICLE.
+y distance to the landmark in meters (forward is positive) RELATIVE TO THE VEHICLE.
+NOTE The vehicle's coordinate system is NOT the map coordinate system. Your code will have to handle this transformation.
+
+
+
+
+与卡尔曼滤波（Kalman Filter）相比较:
+粒子滤波(PF: Particle Filter)的思想基于蒙特卡洛方法(Monte Carlo methods)，它是利用粒子集来表示概率，可以用在任何形式的状态空间模型上。其核心思想是通过从后验概率中抽取的随机状态粒子来表达其分布，是一种顺序重要性采样法(Sequential Importance Sampling)。简单来说，粒子滤波法是指通过寻找一组在状态空间传播的随机样本对概率密度函数进行近似，以样本均值代替积分运算，从而获得状态最小方差分布的过程。这里的样本即指粒子,当样本数量N→∝时可以逼近任何形式的概率密度分布。
+
+
+算法:
+1.初始化粒子:设置N个粒子，每个粒子权重相同。
+2.for 的循环里面， 对每一个粒子根据状态转移矩阵进行预测。预测之后，根据式子4得到每一个粒子对应的权重（根据测量值和预测值），更新每一个粒子。
+3.重采样:N个粒子中，根据每个粒子的权重，判断是否在下一个循环中是否要使用这个粒子。粒子对应权重越高（也就是根据状态转移矩阵得到的预测值和车子身上的传感器得到的值约相似），他被选取的概率就越	大。也就是说，一个有99%权重的粒子，也有1%不被选择使用的可能性。
+4.更新每个粒子的权重并根据重采样可放回的随机抽取，最终通过抽取出来的粒子求得实际车辆位置。

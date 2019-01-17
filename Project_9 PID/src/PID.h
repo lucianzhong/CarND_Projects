@@ -7,16 +7,11 @@
 
 class PID {
 public:
-  /*
-  * Errors
-  */
+//Errors
   double p_error;
   double i_error;
   double d_error;
-
-  /*
-  * Coefficients
-  */ 
+  //Coefficients
   double Kp;
   double Ki;
   double Kd;

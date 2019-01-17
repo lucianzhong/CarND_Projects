@@ -184,14 +184,10 @@ int main() {
     //auto sdata = string(data).substr(0, length);
     //cout << sdata << endl;
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
-
       auto s = hasData(data);
-
       if (s != "") {
-        auto j = json::parse(s);
-        
-        string event = j[0].get<string>();
-        
+        auto j = json::parse(s);        
+        string event = j[0].get<string>();        
         if (event == "telemetry") {
           // j[1] is the data JSON object
 					// Main car's localization Data
@@ -216,17 +212,14 @@ int main() {
 					vector<double> next_x_vals;
 					vector<double> next_y_vals;
 
-					// // DEBUG
 					// cout << endl << "**************** ITERATION BEGIN ****************" << endl << endl;
-
 					ofstream single_iteration_log;
 					single_iteration_log.open("path_planning_log-single_iteration.csv");
 					
 					// ********************* CONSTRUCT INTERPOLATED WAYPOINTS OF NEARBY AREA **********************
 					int num_waypoints = map_waypoints_x.size();
 					int next_waypoint_index = NextWaypoint(car_x, car_y, car_yaw, map_waypoints_x, map_waypoints_y);
-					vector<double> coarse_waypoints_s, coarse_waypoints_x, coarse_waypoints_y, 
-												 coarse_waypoints_dx, coarse_waypoints_dy;
+					vector<double> coarse_waypoints_s, coarse_waypoints_x, coarse_waypoints_y,coarse_waypoints_dx, coarse_waypoints_dy;
 				  for (int i = -NUM_WAYPOINTS_BEHIND; i < NUM_WAYPOINTS_AHEAD; i++) {
 						// for smooting, take so many previous and so many subsequent waypoints
 						int idx = (next_waypoint_index+i) % num_waypoints;
@@ -268,14 +261,6 @@ int main() {
 					// for (auto dy: coarse_waypoints_dy) cout << dy << ", ";
 					// cout << endl;
 
-					// // LOG
-					// if (previous_path_x.size() == 0) {
-					// 	log_file << "waypoints" << endl << "coarse s, coarse x, coarse y, coarse dx, coarse dy" << endl;
-					// 	for (int i = 0; i < coarse_waypoints_dx.size(); i++) {
-					// 		log_file << coarse_waypoints_s[i] << ", " << coarse_waypoints_x[i] << ", " << coarse_waypoints_y[i] << ", " << coarse_waypoints_dx[i] << ", "<< coarse_waypoints_dy[i] << endl;
-					// 	}
-					// 	log_file << endl;
-					// }
 
 					// interpolation parameters
 					double dist_inc = 0.5;	
@@ -320,15 +305,6 @@ int main() {
 					// }
 					// cout << endl << endl;
 
-					// // LOG
-					// // just once...
-					// if (previous_path_x.size() == 0) {
-					// 	log_file << "interp s, interp x, interp y, interp dx, interp dy" << endl;
-					// 	for (int i = 0; i < interpolated_waypoints_dx.size(); i++) {
-					// 		log_file << interpolated_waypoints_s[i] << ", " << interpolated_waypoints_x[i] << ", " << interpolated_waypoints_y[i] << ", " << interpolated_waypoints_dx[i] << ", "<< interpolated_waypoints_dy[i] << endl;
-					// 	}
-					// 	log_file << endl;
-					// }
 
 					// **************** DETERMINE EGO CAR PARAMETERS AND CONSTRUCT VEHICLE OBJECT ******************
 					// Vehicle class requires s,s_d,s_dd,d,d_d,d_dd - in that order
@@ -368,8 +344,7 @@ int main() {
 						// since interpolated waypoints are ~1m apart and path points tend to be <0.5m apart, these 
 						// values can be reused for previous two points (and using the previous waypoint data may be
 						// more accurate) to calculate vel_s (s_dot), vel_d (d_dot), acc_s (s_ddot), and acc_d (d_ddot)
-						int next_interp_waypoint_index = NextWaypoint(pos_x, pos_y, angle, interpolated_waypoints_x, 
-																													interpolated_waypoints_y);
+						int next_interp_waypoint_index = NextWaypoint(pos_x, pos_y, angle, interpolated_waypoints_x,interpolated_waypoints_y);
 						double dx = interpolated_waypoints_dx[next_interp_waypoint_index - 1];
 						double dy = interpolated_waypoints_dy[next_interp_waypoint_index - 1];
 						// sx,sy vector is perpendicular to dx,dy
@@ -531,22 +506,41 @@ int main() {
 					double best_cost = 999999;
 					string best_traj_state = "";
 					for (string state: my_car.available_states) {
-        		vector<vector<double>> target_s_and_d = my_car.get_target_for_state(state, predictions, duration, car_just_ahead);
-
-						// // DEBUG
-        		// cout << "target s&d for state " << state << ": ";
-        		// for (int i = 0; i < 2; i++) {
-            // 	for (int j = 0; j < 3; j++) {
-            //     cout << target_s_and_d[i][j];
-            //     if (j != 2) cout << ", ";
-						// 	}
-						// 	cout << "; ";
-						// }
-						// cout << endl;
-
+						// {{target_s, target_s_d, target_s_dd}, {target_d, target_d_d, target_d_dd}};
+        		        vector<vector<double>> target_s_and_d = my_car.get_target_for_state(state, predictions, duration, car_just_ahead);
+        		        //  {{s1, s2, ... , sn}, {d1, d2, ... , dn}}
 						vector<vector<double>> possible_traj = my_car.generate_traj_for_target(target_s_and_d, duration);
 
+
+
+//possible_traj[0]
+//947  950  953  956  959  963  966  969  973  977  980  984  987  991  994  998  1001  1004  1007  1010  
+//possible_traj[1]
+//1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  
+/*
+						cout<<"possible_traj[0]"<<endl;
+						copy (possible_traj[0].begin(), possible_traj[0].end(), ostream_iterator<int> (cout, "  "));
+						cout<<endl;
+						cout<<"possible_traj[1]"<<endl;
+						copy (possible_traj[1].begin(), possible_traj[1].end(), ostream_iterator<int> (cout, "  "));
+						cout<<endl;
+*/
+
 						double current_cost = calculate_total_cost(possible_traj[0], possible_traj[1], predictions);
+/*
+        		cout << "target s&d for state " << state << ": ";
+        		for (int i = 0; i < 2; i++) {
+                   for (int j = 0; j < 3; j++) {
+                       cout << target_s_and_d[i][j];
+               if (j != 2) cout << ", ";
+							}
+							cout << "; ";
+						 }
+						cout << endl;
+						//target s&d for state LCR: 306.622, 21.5, 0; 10, 0, 0; 
+*/
+
+
 
 						// // DEBUG
 						// cout << "total cost: " << current_cost << endl;
@@ -559,23 +553,7 @@ int main() {
 						}
 					}
 
-					// // DEBUG - ONLY KEEP LANE - REMOVE THIS LATER :D
-					// best_traj_state = "KL";
-					// best_target = my_car.get_target_for_state(best_traj_state, predictions, duration);
-					// // but keep this, maybe
-					// best_frenet_traj = my_car.generate_traj_for_target(best_target, duration);
 
-					// // DEBUG
-					// cout << "chosen state: " << best_traj_state << ", cost: " << best_cost << endl;
-					// cout << "target (s,sd,sdd - d,dd,ddd): (";
-					// for (int i = 0; i < 2; i++) {
-					// 		for (int j = 0; j < 3; j++) {
-					// 				cout << best_target[i][j];
-					// 				if (j != 2) cout << ", ";
-					// 		}
-					// 		cout << "; ";
-					// }
-					// cout << ")" << endl;
 
 					// LOG
 					single_iteration_log << "i,ego s,ego d,s1,d1,s2,d2,s3,d3,s4,d4,s5,d5,s6,d6,s7,d7,s8,d8,s9,d9,s10,d10,s11,d11,s12,d12" << endl;
@@ -590,12 +568,9 @@ int main() {
 					}
 
 					// ********************* PRODUCE NEW PATH ***********************
-					// begin by pushing the last and next-to-last point from the previous path for setting the 
-					// spline the last point should be the first point in the returned trajectory, but because of 
-					// imprecision, also add that point manually
+// begin by pushing the last and next-to-last point from the previous path for setting the  spline the last point should be the first point in the returned trajectory, but because of imprecision, also add that point manually
 
-					vector<double> coarse_s_traj, coarse_x_traj, coarse_y_traj, interpolated_s_traj, 
-												 interpolated_x_traj, interpolated_y_traj;
+					vector<double> coarse_s_traj, coarse_x_traj, coarse_y_traj, interpolated_s_traj,interpolated_x_traj, interpolated_y_traj;
 
 					double prev_s = pos_s - s_dot * PATH_DT;
 					

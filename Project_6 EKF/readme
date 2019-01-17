@@ -61,7 +61,10 @@ https://en.wikipedia.org/wiki/Extended_Kalman_filter
 https://www.cnblogs.com/gaoxiang12/p/5560360.html
 
 
-
+The files:
+	tools.cpp: calculate RMSE & Jacobain
+	kalman_filter.cpp: the EKF class
+	FusionEKF.cpp: the EKF calculate process
 
 
 
